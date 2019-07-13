@@ -1,0 +1,15 @@
+version: '3.4'
+
+services:
+  backoffice:
+    image: node:12.6
+    volumes:
+      - .:/app
+    working_dir: '/app'
+    command: bash -c "yarn install && yarn dev"
+    ports:
+      - 3333:3333
+    links:
+      - redis
+  redis:
+    image: redis
