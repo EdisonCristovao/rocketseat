@@ -1,15 +1,52 @@
 version: '3.4'
 
 services:
-  backoffice:
+  db:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: docker
+      POSTGRES_USER: postgres
+      POSTGRES_DB: gobarber
+    # ports:
+    #   - 5432:5432
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - webnet
+  mongo:
+    image: mongo
+    ports:
+      - 27017:27017
+    # volumes:
+    #   - mongo-data:/var/lib/mongo/data
+    networks:
+      - webnet
+  redis:
+    image: redis:alpine
+    networks:
+      - webnet
+  api:
     image: node:12.6
     volumes:
       - .:/app
     working_dir: '/app'
-    command: bash -c "yarn install && yarn dev"
+    command: bash -c "yarn install && yarn sequelize db:migrate && yarn queue& yarn dev"
     ports:
       - 3333:3333
-    links:
+    environment:
+      DB_HOST: db
+      REDIS_HOST: redis
+      MONGO_HOST: mongo
+    networks:
+      - webnet
+    depends_on:
+      - db
+      - mongo
       - redis
-  redis:
-    image: redis
+    links:
+      - mongo
+networks:
+  webnet:
+volumes:
+  db-data:
+  mongo-data:
