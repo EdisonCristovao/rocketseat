@@ -34,7 +34,7 @@ services:
     ports:
       - 3333:3333
     environment:
-      DB_HOST: db
+      DC_DB_HOST: db
       REDIS_HOST: redis
       MONGO_HOST: mongo
     networks:
