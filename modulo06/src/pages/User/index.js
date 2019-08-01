@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
+import { RectButton } from 'react-native-gesture-handler';
 import PropTypes from 'prop-types';
-
 import api from '../../services/api';
 
 import {
@@ -15,6 +15,7 @@ import {
   Info,
   Title,
   Author,
+  StarsLoad,
 } from './styles';
 
 class User extends Component {
@@ -23,11 +24,17 @@ class User extends Component {
   });
 
   static propTypes = {
-    navigation: PropTypes.shape({ getParam: PropTypes.func }).isRequired,
+    navigation: PropTypes.shape({
+      getParam: PropTypes.func,
+      navigate: PropTypes.func,
+    }).isRequired,
   };
 
   state = {
     stars: [],
+    starsLoading: true,
+    refreshing: false,
+    page: 1,
   };
 
   async componentDidMount() {
@@ -36,15 +43,37 @@ class User extends Component {
 
     const response = await api.get(`users/${user.login}/starred`);
 
-    this.setState({ stars: response.data });
+    this.setState({ stars: response.data, starsLoading: false });
   }
 
-  render() {
+  loadMoreStars = async () => {
+    const { stars, page } = this.state;
     const { navigation } = this.props;
-    const { stars } = this.state;
 
     const user = navigation.getParam('user');
 
+    const response = await api.get(`users/${user.login}/starred`, {
+      params: { page: page + 1 },
+    });
+
+    this.setState({ stars: [...stars, ...response.data], page: page + 1 });
+  };
+
+  refreshList = async () => {
+    const { navigation } = this.props;
+
+    const user = navigation.getParam('user');
+
+    const response = await api.get(`users/${user.login}/starred`);
+
+    this.setState({ stars: response.data, page: 1 });
+  };
+
+  render() {
+    const { navigation } = this.props;
+    const { stars, starsLoading, refreshing } = this.state;
+
+    const user = navigation.getParam('user');
     return (
       <Container>
         <Header>
@@ -53,19 +82,31 @@ class User extends Component {
           <Bio>{user.bio}</Bio>
         </Header>
 
-        <Stars
-          data={stars}
-          keyExtractor={star => String(star.id)}
-          renderItem={({ item }) => (
-            <Starred>
-              <OwnerAvatar source={{ uri: item.owner.avatar_url }} />
-              <Info>
-                <Title>{item.name}</Title>
-                <Author>{item.owner.login}</Author>
-              </Info>
-            </Starred>
-          )}
-        />
+        {starsLoading ? (
+          <StarsLoad color="#7159c1" size={32} />
+        ) : (
+          <Stars
+            onRefresh={this.refreshList}
+            refreshing={refreshing}
+            onEndReachedThreshold={0.2}
+            onEndReached={this.loadMoreStars}
+            data={stars}
+            keyExtractor={star => String(star.id)}
+            renderItem={({ item }) => (
+              <RectButton
+                onPress={() => navigation.navigate('Project', { item })}
+              >
+                <Starred>
+                  <OwnerAvatar source={{ uri: item.owner.avatar_url }} />
+                  <Info>
+                    <Title>{item.name}</Title>
+                    <Author>{item.owner.login}</Author>
+                  </Info>
+                </Starred>
+              </RectButton>
+            )}
+          />
+        )}
       </Container>
     );
   }
