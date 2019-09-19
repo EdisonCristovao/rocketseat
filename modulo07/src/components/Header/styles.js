@@ -5,7 +5,10 @@ export const Container = styled.header`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 50px 0;
+  margin: 50px auto;
+  background-color: #191910;
+  padding: 1rem 2rem;
+  border-radius: 20px;
 `;
 
 export const Cart = styled(Link)`

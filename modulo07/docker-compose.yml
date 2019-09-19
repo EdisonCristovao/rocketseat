@@ -1,0 +1,15 @@
+version: '3.4'
+
+services:
+  frontApp:
+    image: node:12.6
+    # environment:
+    #   API_URL: http://localhost:3001
+    #   UPLOAD_BUCKET_USER_AWS_ACCESS_KEY_ID: AKIAJTX3YDV3QFQR4XHQ
+    #   UPLOAD_BUCKET_USER_AWS_SECRET_ACCESS_KEY: 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
+    volumes:
+      - .:/app
+    working_dir: '/app'
+    command: bash -c "yarn && yarn start"
+    ports:
+      - 3000:3000
